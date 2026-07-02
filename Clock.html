@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="sa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>संस्कृत-समयः Mystery Watch Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* --- Cartoon Drawing Style Background --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Cartoon sky blue wall and wooden floor */
+            background-color: #87CEEB; 
+            background-image: 
+                linear-gradient(0deg, #8B4513 15%, #A0522D 16%, transparent 16%),
+                linear-gradient(90deg, rgba(255,255,255,0.3) 2px, transparent 2px),
+                radial-gradient(circle at 10% 20%, #ffffff 50px, transparent 51px),
+                radial-gradient(circle at 85% 15%, #ffffff 40px, transparent 41px);
+            background-size: 100% 100%, 120px 100%, 100% 100%, 100% 100%;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Prevents all scrolling/overflow */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 3vh 10px;
+            touch-action: none; 
+            border: 8px solid #2c3e50;
+        }
+
+        /* --- 1. Hamburger Menu --- */
+        .menu-wrapper {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+
+        .hamburger {
+            width: 45px;
+            height: 35px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            background: rgba(255,255,255,0.8);
+            padding: 6px;
+            border-radius: 8px;
+            border: 2px solid #2c3e50;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+        }
+
+        .hamburger span {
+            display: block;
+            height: 4px;
+            width: 100%;
+            background: #2c3e50;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+
+        .menu-panel {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 3px solid #2c3e50;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.2);
+            width: max-content;
+            transform: scale(0);
+            transform-origin: top left;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .menu-panel.open {
+            transform: scale(1);
+        }
+
+        .menu-btn {
+            background: transparent;
+            border: none;
+            color: #2c3e50;
+            font-size: 18px;
+            text-align: left;
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .menu-btn.active, .menu-btn:hover {
+            background: #FFD700;
+            color: #000;
+            border: 1px solid #2c3e50;
+        }
+
+        /* --- 2. Target Display --- */
+        .target-box {
+            padding: 10px 30px;
+            background: #fff;
+            border: 4px solid #2c3e50;
+            border-radius: 15px;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+            font-size: clamp(24px, 5vmin, 40px);
+            font-weight: 900;
+            color: #1a1a1a;
+            text-align: center;
+            min-width: 250px;
+            z-index: 10;
+            margin-top: 10px;
+        }
+
+        /* --- 3. Mystery Watch (Hyper-Realistic) --- */
+        .watch-case {
+            position: relative;
+            /* Scales dynamically to always fit between target box and buttons */
+            height: 55vh; 
+            width: 55vh;
+            max-width: 80vw;
+            max-height: 80vw;
+            border-radius: 50%;
+            background: #23272b; 
+            box-shadow: 
+                30px 40px 50px rgba(0, 0, 0, 0.4),   
+                10px 15px 20px rgba(0, 0, 0, 0.3),  
+                2px 2px 4px rgba(0, 0, 0, 0.6),      
+                inset 1px 1px 3px rgba(255, 255, 255, 0.3), 
+                inset -4px -4px 10px rgba(0, 0, 0, 0.8);     
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .watch-face {
+            width: 90%; 
+            height: 90%;
+            border-radius: 50%;
+            background: #fdfbf7; 
+            position: relative;
+            box-shadow: 
+                inset 8px 12px 25px rgba(0, 0, 0, 0.3), 
+                inset -2px -2px 5px rgba(255, 255, 255, 1); 
+            overflow: hidden;
+        }
+
+        /* Mystery Watch Noise Filter */
+        .watch-face::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>');
+            opacity: 0.08;
+            pointer-events: none;
+            mix-blend-mode: darken;
+        }
+
+        .glass-dome {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            pointer-events: none; 
+            z-index: 20;
+            background: linear-gradient(
+                135deg, 
+                rgba(255, 255, 255, 0.5) 0%, 
+                rgba(255, 255, 255, 0.05) 30%, 
+                rgba(255, 255, 255, 0) 50%, 
+                rgba(0, 0, 0, 0.05) 80%, 
+                rgba(0, 0, 0, 0.2) 100%
+            );
+            box-shadow: inset 2px 4px 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .mark {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform-origin: 0 0;
+            font-size: clamp(20px, 4.5vmin, 45px);
+            font-weight: 900;
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            pointer-events: none;
+            color: #1a1a1a;
+            z-index: 5;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        .mark-text {
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+
+        .center-pin {
+            position: absolute;
+            width: clamp(14px, 3vmin, 35px);
+            height: clamp(14px, 3vmin, 35px);
+            background: radial-gradient(circle at 35% 35%, #4a4a4a, #111);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            box-shadow: 3px 5px 6px rgba(0,0,0,0.4), inset 1px 1px 2px rgba(255,255,255,0.3);
+            border: 1px solid #000;
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            background: linear-gradient(to right, #1a1a1a, #2a2a2a, #1a1a1a);
+            border-radius: 6px;
+            cursor: grab;
+            z-index: 10;
+            box-shadow: inset 1px 0px 1px rgba(255,255,255,0.1);
+        }
+        .hand:active { cursor: grabbing; }
+
+        .hour-hand {
+            width: clamp(8px, 2vmin, 20px);
+            height: 30%; 
+            transform: translateX(-50%);
+        }
+
+        .minute-hand {
+            width: clamp(5px, 1.2vmin, 12px);
+            height: 44%; 
+            transform: translateX(-50%);
+            z-index: 11;
+        }
+        .minute-hand::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 10%; 
+            background: linear-gradient(to right, #1a1a1a, #2a2a2a, #1a1a1a);
+            bottom: -10%;
+            border-radius: 4px;
+        }
+
+        /* --- 4. Controls & Exact Feedback --- */
+        .controls-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .feedback {
+            font-size: clamp(22px, 4.5vmin, 34px);
+            font-weight: 900;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            transform: translateY(10px);
+            background: #fff;
+            padding: 5px 20px;
+            border-radius: 10px;
+            border: 3px solid #2c3e50;
+            height: auto;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+        }
+        .feedback.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .feedback.success { color: #2e7d32; }
+        .feedback.error { color: #c62828; }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: clamp(18px, 3.5vmin, 26px);
+            font-weight: 900;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+            color: #fff;
+            border: 3px solid #111;
+        }
+        .btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+        }
+
+        .check-btn { background: #4ade80; color: #000; }
+        .next-btn { background: #FFD700; color: #000; }
+
+        /* Animation class for smooth 5-min snapping */
+        .snap-transition {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Menu -->
+    <div class="menu-wrapper">
+        <div class="hamburger" id="hamburger">
+            <span></span><span></span><span></span>
+        </div>
+        <div class="menu-panel" id="menuPanel">
+            <button class="menu-btn active" data-type="0">वादनम् (00)</button>
+            <button class="menu-btn" data-type="1">सपाद वादनम् (15)</button>
+            <button class="menu-btn" data-type="2">सार्ध वादनम् (30)</button>
+            <button class="menu-btn" data-type="3">पादोन वादनम् (45)</button>
+            <button class="menu-btn" data-type="4">पञ्चाधिक (05)</button>
+            <button class="menu-btn" data-type="5">दशाधिक (10)</button>
+            <button class="menu-btn" data-type="6">पञ्चोन (55)</button>
+            <button class="menu-btn" data-type="7">दशोन (50)</button>
+            <button class="menu-btn" data-type="8">मिश्रित (Random)</button>
+        </div>
+    </div>
+
+    <!-- Target Output -->
+    <div class="target-box" id="sanskritText">...</div>
+
+    <!-- The Mystery Watch -->
+    <div class="watch-case">
+        <div class="watch-face" id="face">
+            <div class="glass-dome"></div>
+            <div class="center-pin"></div>
+            <div class="hand hour-hand" id="hour-hand"></div>
+            <div class="hand minute-hand" id="minute-hand"></div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-container">
+        <div class="feedback" id="feedbackMsg">साधु!</div>
+        <div class="button-group">
+            <button class="btn check-btn" id="checkBtn">परीक्षणम् (Check)</button>
+            <button class="btn next-btn" id="nextBtn">अग्रिमम् (Next)</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CLOCK FACE GENERATION ---
+        const face = document.getElementById('face');
+        const radiusPercent = 40; 
+        
+        for (let i = 1; i <= 12; i++) {
+            let angle = (i * 30 - 90) * (Math.PI / 180);
+            let x = 50 + radiusPercent * Math.cos(angle);
+            let y = 50 + radiusPercent * Math.sin(angle);
+            
+            let mark = document.createElement('div');
+            mark.className = 'mark';
+            mark.style.left = x + '%';
+            mark.style.top = y + '%';
+            mark.innerHTML = `<div class="mark-text">${i}</div>`;
+            face.appendChild(mark);
+        }
+
+        // --- 2. GAME LOGIC & MENU (Flawless Logic) ---
+        const sanskritHours = ["", "एक", "द्वि", "त्रि", "चतुर्", "पञ्च", "षड्", "सप्त", "अष्ट", "नव", "दश", "एकादश", "द्वादश"];
+        let currentTarget = { baseHour: 12, targetMinute: 0, text: "" };
+        let currentMode = 0; 
+        
+        const sanskritDisplay = document.getElementById('sanskritText');
+        const feedbackMsg = document.getElementById('feedbackMsg');
+        const menuPanel = document.getElementById('menuPanel');
+        const menuButtons = document.querySelectorAll('.menu-btn');
+
+        // Toggle Menu
+        document.getElementById('hamburger').addEventListener('click', () => menuPanel.classList.toggle('open'));
+        menuButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                menuButtons.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentMode = parseInt(e.target.dataset.type);
+                menuPanel.classList.remove('open');
+                generateNewTime();
+            });
+        });
+
+        function generateNewTime() {
+            let mode = currentMode === 8 ? Math.floor(Math.random() * 8) : currentMode;
+            let hour = Math.floor(Math.random() * 12) + 1; // The base hour
+            let minute = 0;
+            let text = "";
+            let nextHour = hour === 12 ? 1 : hour + 1;
+
+            switch (mode) {
+                case 0: minute = 0; text = `${sanskritHours[hour]}वादनम्`; break;
+                case 1: minute = 15; text = `सपाद-${sanskritHours[hour]}वादनम्`; break;
+                case 2: minute = 30; text = `सार्ध-${sanskritHours[hour]}वादनम्`; break;
+                case 3: minute = 45; text = `पादोन-${sanskritHours[nextHour]}वादनम्`; break; // Text says next hour, but physical base is still 'hour'
+                case 4: minute = 5; text = `पञ्चाधिक-${sanskritHours[hour]}वादनम्`; break;
+                case 5: minute = 10; text = `दशाधिक-${sanskritHours[hour]}वादनम्`; break;
+                case 6: minute = 55; text = `पञ्चोन-${sanskritHours[nextHour]}वादनम्`; break;
+                case 7: minute = 50; text = `दशोन-${sanskritHours[nextHour]}वादनम्`; break;
+            }
+
+            // CRITICAL FIX: The logic saves the BASE hour, so testing the physical hand position is flawless.
+            currentTarget = { baseHour: hour, targetMinute: minute, text: text };
+            sanskritDisplay.textContent = text;
+            feedbackMsg.classList.remove('show'); 
+        }
+
+        // --- 3. WATCH DRAGGING MECHANICS ---
+        const hourHand = document.getElementById('hour-hand');
+        const minuteHand = document.getElementById('minute-hand');
+
+        let totalMinuteDegrees = 0; 
+        let activeHand = null;
+        let previousAngle = 0;
+
+        function getAngle(e) {
+            const rect = face.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const x = clientX - centerX;
+            const y = clientY - centerY;
+            
+            let theta = Math.atan2(y, x) * (180 / Math.PI) + 90; 
+            if (theta < 0) theta += 360;
+            return theta;
+        }
+
+        function onDragStart(e, handType) {
+            e.preventDefault();
+            activeHand = handType;
+            previousAngle = getAngle(e);
+            
+            feedbackMsg.classList.remove('show');
+            minuteHand.classList.remove('snap-transition');
+            hourHand.classList.remove('snap-transition');
+            
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchmove', onDragMove, {passive: false});
+            document.addEventListener('touchend', onDragEnd);
+        }
+
+        function onDragMove(e) {
+            if (!activeHand) return;
+            e.preventDefault();
+            
+            let currentAngle = getAngle(e);
+            let delta = currentAngle - previousAngle;
+
+            if (delta > 180) delta -= 360;
+            else if (delta < -180) delta += 360;
+
+            if (activeHand === 'minute') {
+                totalMinuteDegrees += delta;
+            } else if (activeHand === 'hour') {
+                totalMinuteDegrees += (delta * 12); 
+            }
+
+            previousAngle = currentAngle;
+            updateHands(activeHand === 'minute', activeHand === 'hour');
+        }
+
+        function onDragEnd() {
+            activeHand = null;
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('touchend', onDragEnd);
+            
+            minuteHand.classList.add('snap-transition');
+            hourHand.classList.add('snap-transition');
+
+            // EXACT AUTO-SNAP: Snaps to absolute nearest 5-min interval
+            let rawMinute = totalMinuteDegrees / 6; 
+            let snappedMinute = Math.round(rawMinute / 5) * 5; 
+            totalMinuteDegrees = snappedMinute * 6;
+
+            updateHands(); 
+        }
+
+        function updateHands(isMinActive = false, isHrActive = false) {
+            minuteHand.style.transform = `translateX(-50%) rotate(${totalMinuteDegrees}deg)`;
+            hourHand.style.transform = `translateX(-50%) rotate(${totalMinuteDegrees / 12}deg)`;
+            
+            // Hyper-realistic dynamic shadow math
+            let minShadowDist = isMinActive ? 3 : 8;
+            let minShadowBlur = isMinActive ? 3 : 6;
+            let minShadowX = minShadowDist * Math.cos((totalMinuteDegrees - 90) * Math.PI / 180);
+            let minShadowY = minShadowDist * Math.sin((totalMinuteDegrees - 90) * Math.PI / 180);
+            minuteHand.style.filter = `drop-shadow(${minShadowX}px ${Math.abs(minShadowY)}px ${minShadowBlur}px rgba(0,0,0,0.6))`;
+
+            let hrShadowDist = isHrActive ? 2 : 5;
+            let hrShadowBlur = isHrActive ? 2 : 4;
+            let hrShadowX = hrShadowDist * Math.cos(((totalMinuteDegrees/12) - 90) * Math.PI / 180);
+            let hrShadowY = hrShadowDist * Math.sin(((totalMinuteDegrees/12) - 90) * Math.PI / 180);
+            hourHand.style.filter = `drop-shadow(${hrShadowX}px ${Math.abs(hrShadowY)}px ${hrShadowBlur}px rgba(0,0,0,0.8))`;
+        }
+
+        hourHand.addEventListener('mousedown', (e) => onDragStart(e, 'hour'));
+        minuteHand.addEventListener('mousedown', (e) => onDragStart(e, 'minute'));
+        hourHand.addEventListener('touchstart', (e) => onDragStart(e, 'hour'), {passive: false});
+        minuteHand.addEventListener('touchstart', (e) => onDragStart(e, 'minute'), {passive: false});
+
+
+        // --- 4. VALIDATION & BUTTON FLOW ---
+        document.getElementById('checkBtn').addEventListener('click', () => {
+            // Because of the snap function, these numbers will ALWAYS be exact multiples of 5.
+            let normalizedMinDegrees = ((totalMinuteDegrees % 360) + 360) % 360;
+            
+            // Get continuous total hours mathematically
+            // This properly handles multiple 360 loops forward or backward
+            let continuousTotalHours = totalMinuteDegrees / 360; 
+            let userBaseHour = Math.floor(continuousTotalHours) % 12;
+            if (userBaseHour <= 0) userBaseHour += 12; // Handles negative numbers and 0 to map to 1-12
+
+            let userMinute = Math.round(normalizedMinDegrees / 6);
+            if (userMinute === 60) userMinute = 0;
+
+            // Direct comparison to the stored target requirements
+            let isHourCorrect = (userBaseHour === currentTarget.baseHour);
+            let isMinuteCorrect = (userMinute === currentTarget.targetMinute);
+
+            if (isHourCorrect && isMinuteCorrect) {
+                feedbackMsg.textContent = "उत्तमम्! (Correct!)";
+                feedbackMsg.className = 'feedback success show';
+            } else {
+                feedbackMsg.textContent = "अशुद्धम्! पुनः प्रयत्नं करोतु। (Wrong! Try Again)";
+                feedbackMsg.className = 'feedback error show';
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            generateNewTime();
+        });
+
+        // Initialize Start State
+        // Start watch at 12:00
+        updateHands(); 
+        generateNewTime();
+    </script>
+</body>
+</html>
